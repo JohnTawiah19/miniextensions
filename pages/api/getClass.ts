@@ -1,6 +1,6 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from "next";
-import Airtable from "airtable";
+import Airtable, { FieldSet, Records } from "airtable";
 
 interface IGetClassOption {
   baseName: string;
@@ -8,7 +8,7 @@ interface IGetClassOption {
 }
 interface IGetStudentsOption {
   baseName: string;
-  recordId: string;
+  recordIds: string[] | any;
 }
 
 const apiKey = process.env.NEXT_PUBLIC_API_KEY as string;
@@ -24,43 +24,47 @@ export const getClass = ({ baseName, student }: IGetClassOption) => {
     .firstPage();
 };
 
-const getStudentById = async (id: string) => {
-  // return await base("Students")
-  //   .find(id)
-  //   .then((value) => value);
-  base("Students").find(id, function (err, record) {
-    if (err) {
-      console.error(err);
-      return;
-    }
-    console.log("Retrieved", record.id);
-    return record;
-  });
+export const getStudentById = ({
+  baseName,
+  recordIds,
+}: IGetStudentsOption): Promise<Records<FieldSet>> | any => {
+  const students = Promise.all(
+    recordIds.map(async (id) => {
+      const response = await base(baseName).find(id);
+      const data = response;
+      return data.fields;
+    })
+  );
+  return students;
 };
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // const student = JSON.parse(req.body);
+  // const student = JSON.parse(req.body.student);
+  console.log(JSON.parse(req.body));
   const data = await getClass({ baseName: "Classes", student: "Sid" });
-  const result: any[] = [];
-  const [{ fields: res1 }, { fields: res2 }] = data;
-  await [res1, res2].forEach(async (item) => {
-    const students = await item.Students.map(async (value: string) => {
-      return setTimeout(async () => {
-        const student = await getStudentById(value);
-        // console.log(student.fields);
-        // return await Promise.resolve(student);
-        console.log(student.fields);
-        return Promise.resolve(student);
-      }, 500);
-    });
-    await result.push({
-      ...item,
-      students: await Promise.all(students).then((value) => value),
-    });
-  });
-  console.log(result);
-  res.json(result);
+
+  const response = await Promise.all(
+    data.map(async (item) => {
+      const record = [item.fields.Students];
+      const getStudents = await Promise.all(
+        record?.map(async (recordIds: string[]) => {
+          const student = await getStudentById({
+            baseName: "Students",
+            recordIds,
+          });
+          return student;
+        })
+      );
+      const students = getStudents.flatMap((item) => item);
+
+      return {
+        name: item.fields.Name,
+        students: students.map((item) => item.Name),
+      };
+    })
+  );
+  res.json(response);
 }

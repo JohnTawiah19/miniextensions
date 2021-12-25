@@ -14,10 +14,13 @@
 
 .card {
   display: flex;
+  width: 350px;
   padding: 10px;
   flex-direction: column;
-  border: 1px solid "#444";
   border-radius: 5px;
+  border: 1px solid #aaa;
+  border-radius: 5px;
+  margin-bottom: 10px;
 }
 
 .card p {
@@ -43,4 +46,18 @@
 .btn {
   margin-top: 5px;
   padding: 5px;
+}
+
+.logout_btn {
+  margin-top: 5px;
+  padding: 5px;
+  position: fixed;
+  right: 10px;
+  top: 10px;
+}
+
+.card_list {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }

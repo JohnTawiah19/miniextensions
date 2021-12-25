@@ -2,20 +2,31 @@ import React from "react";
 import styles from "../styles/Home.module.css";
 
 interface StudentCardProps {
-  course: string;
+  name: string;
   students: string[];
 }
-export function StudentCard({ course, students }: StudentCardProps) {
+export function StudentCard({ name, students }: StudentCardProps) {
   return (
     <div className={styles.card}>
-      <p>Name</p>
-      <p>{course}</p>
-      <p>Students</p>
-      <p>
+      <strong>
+        <p>Name</p>
+      </strong>
+      <p>{name}</p>
+      <strong>
+        <p>Students</p>
+      </strong>
+      <div style={{ display: "flex", flexDirection: "row" }}>
         {students.map((student, index) => (
-          <p key={`${student}_ ${index}`}>{student}</p>
+          <p key={`${student}_ ${index}`}>{student},&nbsp; </p>
         ))}
-      </p>
+      </div>
     </div>
   );
 }
+
+StudentCard.defaultProps = {
+  data: {
+    name: "test1",
+    students: ["test1", "test2", "test3"],
+  },
+};

@@ -1,13 +1,13 @@
-type SET_COURSE = "SET_COURSE";
+type SET_STUDENTS = "SET_STUDENTS";
 
-interface ICourse {
+interface IStudents {
   payload: {
-    id: string;
     name: string;
+    students: string[];
   };
 }
 
 export interface ISetCourse {
-  type: SET_COURSE;
-  payload: ICourse;
+  type: SET_STUDENTS;
+  payload: IStudents;
 }

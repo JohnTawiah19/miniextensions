@@ -1,21 +1,14 @@
 import type { NextPage } from "next";
+import { useRouter } from "next/router";
 import React from "react";
 import { useStore } from "react-redux";
-import { AppState, setCourse } from "../redux";
+import { AppState, setStudents } from "../redux";
 import styles from "../styles/Home.module.css";
 
 const Home: NextPage = () => {
   const [inputData, setInputData] = React.useState<string>("");
-  const [courseId, setCourseId] = React.useState<string[]>([""]);
   const store = useStore<AppState>();
-
-  const courseState = (courses: any[]) => {
-    return courses.map((course) => ({
-      id: course.id,
-      name: course.fields.Name,
-      students: [],
-    }));
-  };
+  const router = useRouter();
 
   const getCourseData = async (param: string) => {
     try {
@@ -24,29 +17,9 @@ const Home: NextPage = () => {
         body: JSON.stringify(param),
       });
       const data = await response.json();
-
-      const courses = courseState(data);
-      store.dispatch(setCourse(courses));
-
-      let course = store.getState();
-      const courseIds = course.map((course) => course.id);
-      getStudentsData(courseIds);
-    } catch (err: any) {
-      throw new Error(err);
-    }
-  };
-
-  const getStudentsData = async (param: string[]) => {
-    try {
-      const students = param.map(async (input) => {
-        const response = await fetch("http://localhost:3000/api/getStudents", {
-          method: "POST",
-          body: JSON.stringify(input),
-        });
-        const data = await response.json();
-        console.log(data);
-      });
-      console.log(students);
+      console.log(data);
+      store.dispatch(setStudents(data));
+      router.push("/student");
     } catch (err: any) {
       throw new Error(err);
     }
