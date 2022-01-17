@@ -28,7 +28,7 @@ const Home: NextPage = () => {
   return (
     <div className={styles.home}>
       <div className={styles.form}>
-        <label> Student Name: </label>
+        <label> Student Name:&nbsp; </label>
         <input type="text" onChange={(e) => setInputData(e.target.value)} />
       </div>
       <button onClick={() => getCourseData(inputData)} className={styles.btn}>

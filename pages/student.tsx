@@ -19,12 +19,11 @@ export default function Student() {
         <button className={styles.logout_btn}>logout</button>
       </Link>
       <div className={styles.card_list}>
-        <div>{!students && <p>loading...</p>}</div>
         {students && students.length > 0 ? (
-          students.map((student) => (
+          students.map((student, index) => (
             <StudentCard
               name={student.name}
-              key={student.name}
+              key={student.name + index}
               students={student.students}
             />
           ))

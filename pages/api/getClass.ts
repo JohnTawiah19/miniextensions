@@ -8,6 +8,7 @@ interface IGetClassOption {
 }
 interface IGetStudentsOption {
   baseName: string;
+  // Set type to any here because recordIds type from Airtable is a readonly string[]
   recordIds: string[] | any;
 }
 
@@ -19,52 +20,55 @@ const base = new Airtable({ apiKey }).base(baseKey);
 export const getClass = ({ baseName, student }: IGetClassOption) => {
   return base(baseName)
     .select({
-      filterByFormula: `SEARCH("${student}", {Students})`,
+      filterByFormula: `FIND("${student}", {Name})`,
     })
     .firstPage();
 };
 
-export const getStudentById = ({
+export const getRecordsById = ({
   baseName,
   recordIds,
-}: IGetStudentsOption): Promise<Records<FieldSet>> | any => {
-  const students = Promise.all(
-    recordIds.map(async (id) => {
+}: IGetStudentsOption): Promise<Records<FieldSet>> => {
+  const records = Promise.all(
+    recordIds.map(async (id: string) => {
       const response = await base(baseName).find(id);
-      const data = response;
-      return data.fields;
+      return response;
     })
   );
-  return students;
+  return records;
 };
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // const student = JSON.parse(req.body.student);
-  console.log(JSON.parse(req.body));
-  const data = await getClass({ baseName: "Classes", student: "Sid" });
+  const student = JSON.parse(req.body);
+  const data = await getClass({ baseName: "Students", student });
+  const classIds = data.map((item) => item.fields.Classes);
 
-  const response = await Promise.all(
-    data.map(async (item) => {
-      const record = [item.fields.Students];
-      const getStudents = await Promise.all(
-        record?.map(async (recordIds: string[]) => {
-          const student = await getStudentById({
+  const classes = await Promise.all(
+    classIds.map(async (ids) => {
+      const courseIds = await getRecordsById({
+        baseName: "Classes",
+        recordIds: ids,
+      });
+      const student = await Promise.all(
+        courseIds.map(async (item) => {
+          const recordIds = item.fields.Students;
+          const className = item.fields.Name;
+          const student = await getRecordsById({
             baseName: "Students",
             recordIds,
           });
-          return student;
+          return {
+            name: className,
+            students: student.map((item) => item.fields.Name),
+          };
         })
       );
-      const students = getStudents.flatMap((item) => item);
-
-      return {
-        name: item.fields.Name,
-        students: students.map((item) => item.Name),
-      };
+      return student;
     })
   );
-  res.json(response);
+
+  res.json(classes.flat());
 }
